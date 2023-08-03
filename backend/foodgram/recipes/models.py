@@ -8,14 +8,15 @@ from django.db.models import (
     PositiveIntegerField,
     SlugField,
     TextField,
+    ImageField
 )
 
 User = get_user_model()
 
 
 class Tag(Model):
-    name = CharField(max_length=200)
-    color = CharField(max_length=7)
+    name = CharField(max_length=200, unique=True)
+    color = CharField(max_length=7, unique=True)
     slug = SlugField(max_length=200, unique=True)
 
 
@@ -30,6 +31,9 @@ class Recipe(Model):
         through="RecipeIngredient",
         through_fields=("recipe", "ingredient"),
     )
+    # image = ImageField(
+    #     upload_to='../images/'
+    # )
 
 
 class Ingredient(Model):

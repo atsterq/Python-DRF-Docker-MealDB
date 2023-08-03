@@ -1,43 +1,90 @@
-from recipes.models import Recipe, RecipeIngredient, Tag
-from rest_framework import serializers
+import base64
+
+from django.core.files.base import ContentFile
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from rest_framework.serializers import (
+    CharField,
+    ImageField,
+    ModelSerializer,
+    PrimaryKeyRelatedField,
+)
 
 
-class TagSerializer(serializers.ModelSerializer):
+# images
+class Base64ImageField(ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith("data:image"):
+            format, imgstr = data.split(";base64,")
+            ext = format.split("/")[-1]
+
+            data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
+
+        return super().to_internal_value(data)
+
+
+class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
         fields = "__all__"
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source="ingredient.name")
-    measurement_unit = serializers.CharField(
-        source="ingredient.measurement_unit"
-    )
+class IngredientSerializer(ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = "__all__"
+
+
+class RecipeIngredientSerializer(ModelSerializer):
+    name = CharField(source="ingredient.name")
+    measurement_unit = CharField(source="ingredient.measurement_unit")
 
     class Meta:
         model = RecipeIngredient
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         many=True, source="recipe_ingredient"
     )
+    # image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Recipe
         fields = "__all__"
 
 
-class RecipeCreateSerializer(serializers.ModelSerializer):
-    # ingredients = RecipeIngredientCreateSerializer(many=True)
+class RecipeIngredientCreateSerializer(ModelSerializer):
+    id = PrimaryKeyRelatedField(
+        source="ingredient", queryset=Ingredient.objects.all()
+    )
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ("id", "amount")
+
+
+class RecipeCreateSerializer(ModelSerializer):
+    ingredients = RecipeIngredientCreateSerializer(many=True)
 
     class Meta:
         model = Recipe
-        fields = ("name", "cooking_time", "text", "tags")
+        fields = ("name", "cooking_time", "text", "tags", "ingredients")
 
-    # def create(self, validated_data):       , "ingredients"
-    #     print(validated_data)
-    #     ingredients = validated_data.pop('ingredients')
-    #     return super().create(validated_data)
+    def create(self, validated_data):
+        ingredients = validated_data.pop("ingredients")
+        instance = super().create(validated_data)
+        print("PRINT ingredients:", ingredients)
+
+        for ingredient_data in ingredients:  # use bulk_create instead
+            RecipeIngredient(
+                recipe=instance,
+                ingredient=ingredient_data["ingredient"],
+                amount=ingredient_data["amount"],
+            ).save()
+
+        return instance
+
+    # def to_representation(self, instance):
+    #     return super().to_representation(instance)

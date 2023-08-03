@@ -1,4 +1,10 @@
-from api.views import CustomUserViewSet, RecipeViewSet, TagViewSet, index
+from api.views import (
+    CustomUserViewSet,
+    IngredientViewSet,
+    RecipeViewSet,
+    TagViewSet,
+    index,
+)
 
 # IngredientViewSet, RecipeViewSet,
 from django.urls import include, path
@@ -8,6 +14,8 @@ router = routers.DefaultRouter()
 router.register("users", CustomUserViewSet)
 router.register("tags", TagViewSet)
 router.register("recipes", RecipeViewSet)
+router.register("ingredients", IngredientViewSet)
+
 
 urlpatterns = [
     path("index", index),

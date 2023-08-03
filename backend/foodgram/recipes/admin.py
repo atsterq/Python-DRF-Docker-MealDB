@@ -9,14 +9,18 @@ class RecipeIngredientInLine(admin.TabularInline):
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name',)
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'author')
     inlines = (RecipeIngredientInLine, )
+    list_filter = ('name', 'author', 'tags')
+# На админ-странице рецепта отображается общее число добавлений этого рецепта в избранное.
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('name', 'measurement_unit')
+    list_filter = ('name',)
