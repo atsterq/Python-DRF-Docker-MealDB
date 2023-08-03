@@ -38,6 +38,8 @@ class Ingredient(Model):
 
 
 class RecipeIngredient(Model):
-    recipe = ForeignKey(Recipe, on_delete=CASCADE)
+    recipe = ForeignKey(
+        Recipe, related_name="recipe_ingredient", on_delete=CASCADE
+    )
     ingredient = ForeignKey(Ingredient, on_delete=CASCADE)
     amount = PositiveIntegerField()

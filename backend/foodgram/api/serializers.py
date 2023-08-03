@@ -22,9 +22,22 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
-        many=True, source="recipeingredient_set"
+        many=True, source="recipe_ingredient"
     )
 
     class Meta:
         model = Recipe
         fields = "__all__"
+
+
+class RecipeCreateSerializer(serializers.ModelSerializer):
+    # ingredients = RecipeIngredientCreateSerializer(many=True)
+
+    class Meta:
+        model = Recipe
+        fields = ("name", "cooking_time", "text", "tags")
+
+    # def create(self, validated_data):       , "ingredients"
+    #     print(validated_data)
+    #     ingredients = validated_data.pop('ingredients')
+    #     return super().create(validated_data)
