@@ -3,19 +3,19 @@ from django.db.models import (
     CASCADE,
     CharField,
     ForeignKey,
+    ImageField,
     ManyToManyField,
     Model,
     PositiveIntegerField,
     SlugField,
     TextField,
-    ImageField
 )
 
 User = get_user_model()
 
 
 class Tag(Model):
-    name = CharField(max_length=200, unique=True)
+    name = CharField(max_length=200, unique=True)  # db_index=True
     color = CharField(max_length=7, unique=True)
     slug = SlugField(max_length=200, unique=True)
 

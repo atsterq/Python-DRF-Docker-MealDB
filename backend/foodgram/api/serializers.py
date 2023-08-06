@@ -1,6 +1,5 @@
-import base64
-
 from django.core.files.base import ContentFile
+from drf_extra_fields.fields import Base64ImageField
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from rest_framework.serializers import (
     CharField,
@@ -9,17 +8,16 @@ from rest_framework.serializers import (
     PrimaryKeyRelatedField,
 )
 
-
 # images
-class Base64ImageField(ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith("data:image"):
-            format, imgstr = data.split(";base64,")
-            ext = format.split("/")[-1]
+# class Base64ImageField(ImageField):
+#     def to_internal_value(self, data):
+#         if isinstance(data, str) and data.startswith("data:image"):
+#             format, imgstr = data.split(";base64,")
+#             ext = format.split("/")[-1]
 
-            data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
+#             data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
 
-        return super().to_internal_value(data)
+#         return super().to_internal_value(data)
 
 
 class TagSerializer(ModelSerializer):

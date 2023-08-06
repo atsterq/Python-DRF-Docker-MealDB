@@ -18,6 +18,6 @@ class Command(BaseCommand):
             reader = csv.DictReader(file, delimiter=",")
             for row in reader:
                 Ingredient.objects.get_or_create(
-                    name=row[0], measurement_unit=row[1] # там нет заголовков
+                    name=row[0], measurement_unit=row[1]  # там нет заголовков
                 )
         self.stdout.write(self.style.SUCCESS("Data is transferred"))

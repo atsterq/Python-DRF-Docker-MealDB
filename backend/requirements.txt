@@ -1,3 +1,4 @@
 Django==3.2
 djangorestframework
 djoser
+django-extra-fields

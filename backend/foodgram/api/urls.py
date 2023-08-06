@@ -6,7 +6,6 @@ from api.views import (
     index,
 )
 
-# IngredientViewSet, RecipeViewSet,
 from django.urls import include, path
 from rest_framework import routers
 
