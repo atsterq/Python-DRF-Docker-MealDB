@@ -4,13 +4,13 @@ from api.serializers import (
     RecipeSerializer,
     TagSerializer,
 )
-from djoser.views import UserViewSet
+# from djoser.views import UserViewSet
 from recipes.models import Ingredient, Recipe, Tag
 from rest_framework.viewsets import ModelViewSet
 
 
-class CustomUserViewSet(UserViewSet):
-    pass
+# class CustomUserViewSet(UserViewSet):
+#     pass
 
 
 class TagViewSet(ModelViewSet):
