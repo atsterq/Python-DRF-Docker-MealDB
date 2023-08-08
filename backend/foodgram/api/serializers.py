@@ -32,7 +32,7 @@ class TagSerializer(ModelSerializer):
 class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = "__all__"
+        fields = ("name", "measurement_unit")
 
 
 class RecipeIngredientSerializer(ModelSerializer):
@@ -67,7 +67,7 @@ class RecipeIngredientCreateSerializer(ModelSerializer):
 
 
 class RecipeCreateSerializer(ModelSerializer):
-    ingredients = RecipeIngredientCreateSerializer(many=True)
+    ingredients = RecipeIngredientCreateSerializer(many=True, write_only=True)
     author = HiddenField(
         default=CurrentUserDefault()
     )  # add current user as author (only id)
