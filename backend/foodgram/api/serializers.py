@@ -1,5 +1,5 @@
 import base64
-from rest_framework.fields import IntegerField
+
 from django.core.files.base import ContentFile
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from rest_framework.serializers import (
@@ -10,6 +10,7 @@ from rest_framework.serializers import (
     ModelSerializer,
     PrimaryKeyRelatedField,
 )
+from users.models import Subscription, User
 
 
 class Base64ImageField(ImageField):
@@ -23,6 +24,19 @@ class Base64ImageField(ImageField):
         return super().to_internal_value(data)
 
 
+class UserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "password",
+        ]
+
+
 class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
@@ -32,7 +46,7 @@ class TagSerializer(ModelSerializer):
 class IngredientSerializer(ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ("name", "measurement_unit")
+        fields = ("id", "name", "measurement_unit")
 
 
 class RecipeIngredientSerializer(ModelSerializer):
@@ -59,7 +73,6 @@ class RecipeIngredientCreateSerializer(ModelSerializer):
     id = PrimaryKeyRelatedField(
         source="ingredient", queryset=Ingredient.objects.all()
     )
-    # id = IntegerField(write_only=True)
 
     class Meta:
         model = RecipeIngredient
