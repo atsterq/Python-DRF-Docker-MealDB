@@ -1,4 +1,5 @@
 Django==3.2
 djangorestframework
 djoser
-django-extra-fields
+# django-extra-fields
+pillow==10.0.0

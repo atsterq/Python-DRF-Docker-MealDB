@@ -13,7 +13,7 @@ PATH_TO_CSV = os.path.join(
 
 
 class Command(BaseCommand):
-    help = "Transfers data from csv file to database"
+    help = "Transfers data from csv file to database."
 
     def handle(self, *args, **options):
         self.stdout.write("Start of data transferring.")

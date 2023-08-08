@@ -10,6 +10,7 @@ class RecipeIngredientInLine(admin.TabularInline):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name',)
+    search_fields = ('name',)
 
 
 @admin.register(Recipe)

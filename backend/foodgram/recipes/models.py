@@ -15,7 +15,7 @@ User = get_user_model()
 
 
 class Tag(Model):
-    name = CharField(max_length=200, unique=True)  # db_index=True
+    name = CharField(max_length=200, unique=True)
     color = CharField(max_length=7, unique=True)
     slug = SlugField(max_length=200, unique=True)
 
@@ -31,13 +31,11 @@ class Recipe(Model):
         through="RecipeIngredient",
         through_fields=("recipe", "ingredient"),
     )
-    # image = ImageField(
-    #     upload_to='../images/'
-    # )
+    image = ImageField(upload_to="recipes/images/", null=True, default=None)
 
 
 class Ingredient(Model):
-    name = CharField(max_length=200)
+    name = CharField(max_length=200, db_index=True)
     measurement_unit = CharField(max_length=200)
 
 
