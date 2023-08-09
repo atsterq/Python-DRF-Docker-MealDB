@@ -5,6 +5,7 @@ from api.serializers import (
     TagSerializer,
     UserSerializer,
 )
+# from djoser.views import UserViewSet
 
 # from djoser.views import UserViewSet
 from recipes.models import Ingredient, Recipe, Tag
