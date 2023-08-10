@@ -9,6 +9,7 @@ from rest_framework.serializers import (
     ImageField,
     ModelSerializer,
     PrimaryKeyRelatedField,
+    # SerializerMethodField,
 )
 from users.models import Subscription, User
 
@@ -24,7 +25,15 @@ class Base64ImageField(ImageField):
         return super().to_internal_value(data)
 
 
+class SubscriptionSerializer(ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = "__all__"
+
+
 class UserSerializer(ModelSerializer):
+    # recipes = SerializerMethodField(read_only=True)
+
     class Meta:
         model = User
         fields = [
@@ -33,8 +42,20 @@ class UserSerializer(ModelSerializer):
             "username",
             "first_name",
             "last_name",
-            "password",
+            # "is_subscribed",
+            # "recipes",
+            # "password",
         ]
+        read_only_fields = ("password",)
+
+# class UserMeSerializer(ModelSerializer):
+    
+
+    # def get_recipes(self, user):
+    #     request = self.context.get("request")
+    #     return RecipeUserListsSerializer(
+    #         user.recipes, many=True, context={"request": request}
+    #     ).data
 
 
 class TagSerializer(ModelSerializer):
@@ -58,15 +79,29 @@ class RecipeIngredientSerializer(ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
+# GET
 class RecipeSerializer(ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         many=True, source="recipe_ingredient"
     )
+    author = UserSerializer(read_only=True)
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
-        fields = "__all__"
+        fields = (
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+            # "is_favorited",
+            # "is_in_shopping_cart",
+        )
 
 
 class RecipeIngredientCreateSerializer(ModelSerializer):
@@ -79,12 +114,55 @@ class RecipeIngredientCreateSerializer(ModelSerializer):
         fields = ("id", "amount")
 
 
+class RecipeIngredientListSerializer(ModelSerializer):
+    class Meta:
+        model = RecipeIngredient
+        fields = ("id", "amount")
+
+
+class RecipeListSerializer(ModelSerializer):
+    ingredients = RecipeIngredientListSerializer(
+        many=True, source="recipe_ingredient"
+    )
+    author = HiddenField(default=CurrentUserDefault())
+
+    class Meta:
+        model = Recipe
+        fields = (
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+        )
+
+
+class RecipeUserListsSerializer(ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = (
+            "id",
+            "name",
+            "image",
+            "cooking_time",
+        )
+        read_only_fields = (
+            "id",
+            "name",
+            "image",
+            "cooking_time",
+        )
+        # read_only_fields = ("__all__",)
+
+
 class RecipeCreateSerializer(ModelSerializer):
     ingredients = RecipeIngredientCreateSerializer(many=True, write_only=True)
-    author = HiddenField(
-        default=CurrentUserDefault()
-    )  # add current user as author (only id)
-    image = Base64ImageField(required=False, allow_null=True)
+    author = HiddenField(default=CurrentUserDefault())
+    # author = UserSerializer(read_only=True)
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -111,5 +189,7 @@ class RecipeCreateSerializer(ModelSerializer):
 
         return instance
 
-    # def to_representation(self, instance):
-    #     return super().to_representation(instance)
+    def to_representation(self, instance):
+        return RecipeListSerializer(
+            instance, context={"request": self.context.get("request")}
+        ).data

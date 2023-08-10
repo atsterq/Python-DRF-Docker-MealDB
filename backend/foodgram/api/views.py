@@ -5,10 +5,10 @@ from api.serializers import (
     TagSerializer,
     UserSerializer,
 )
-# from djoser.views import UserViewSet
 
 # from djoser.views import UserViewSet
 from recipes.models import Ingredient, Recipe, Tag
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from users.models import User
 
@@ -21,6 +21,10 @@ class UserViewSet(ModelViewSet):
 class TagViewSet(ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = [
+        AllowAny,
+    ]
+    pagination_class = None
 
 
 class RecipeViewSet(ModelViewSet):
@@ -45,9 +49,10 @@ class RecipeViewSet(ModelViewSet):
         return recipes
 
     def get_serializer_class(self):
-        if self.action == "create":  # need to add update
+        if self.request.method == "POST":
             return RecipeCreateSerializer
-        return RecipeSerializer
+        if self.request.method == "GET":
+            return RecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

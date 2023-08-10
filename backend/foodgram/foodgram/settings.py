@@ -82,7 +82,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 LANGUAGE_CODE = "en-us"
 
@@ -113,4 +113,14 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     "LOGIN_FIELD": "email",
+    # "SERIALIZERS": {
+    #     "user": "api.serializers.UserSerializer",
+    #     "current_user": "api.serializers.CurrentUserSerializer",
+    #     "user_create": "api.serializers.UserCreateSerializer",
+    # },
+    # "PERMISSIONS": {
+    #     "user_list": ["rest_framework.permissions.AllowAny"],
+    #     "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+    # },
+    # "HIDE_USERS": False,
 }

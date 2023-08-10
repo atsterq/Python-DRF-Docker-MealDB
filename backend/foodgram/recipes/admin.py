@@ -1,7 +1,6 @@
 from django.contrib import admin
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.models import Subscription, User
-from users.models import Subscription, User
 
 
 class RecipeIngredientInLine(admin.TabularInline):
@@ -47,9 +46,6 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ("name", "author", "favorite")
     inlines = (RecipeIngredientInLine,)
     list_filter = ("name", "author", "tags")
-
-
-# На админ-странице рецепта отображается общее число добавлений этого рецепта в избранное.
 
 
 @admin.register(Ingredient)
