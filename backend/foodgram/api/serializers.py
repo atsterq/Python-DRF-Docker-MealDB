@@ -2,14 +2,13 @@ import base64
 
 from django.core.files.base import ContentFile
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
-from rest_framework.serializers import (
+from rest_framework.serializers import (  # SerializerMethodField,
     CharField,
     CurrentUserDefault,
     HiddenField,
     ImageField,
     ModelSerializer,
     PrimaryKeyRelatedField,
-    # SerializerMethodField,
 )
 from users.models import Subscription, User
 
@@ -23,6 +22,18 @@ class Base64ImageField(ImageField):
             data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
 
         return super().to_internal_value(data)
+
+
+class TagSerializer(ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ("id", "name", "color", "slug")
+
+
+class IngredientSerializer(ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ("id", "name", "measurement_unit")
 
 
 class SubscriptionSerializer(ModelSerializer):
@@ -48,26 +59,15 @@ class UserSerializer(ModelSerializer):
         ]
         read_only_fields = ("password",)
 
+
 # class UserMeSerializer(ModelSerializer):
-    
-
-    # def get_recipes(self, user):
-    #     request = self.context.get("request")
-    #     return RecipeUserListsSerializer(
-    #         user.recipes, many=True, context={"request": request}
-    #     ).data
 
 
-class TagSerializer(ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = "__all__"
-
-
-class IngredientSerializer(ModelSerializer):
-    class Meta:
-        model = Ingredient
-        fields = ("id", "name", "measurement_unit")
+# def get_recipes(self, user):
+#     request = self.context.get("request")
+#     return RecipeUserListsSerializer(
+#         user.recipes, many=True, context={"request": request}
+#     ).data
 
 
 class RecipeIngredientSerializer(ModelSerializer):
@@ -140,21 +140,21 @@ class RecipeListSerializer(ModelSerializer):
         )
 
 
-class RecipeUserListsSerializer(ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = (
-            "id",
-            "name",
-            "image",
-            "cooking_time",
-        )
-        read_only_fields = (
-            "id",
-            "name",
-            "image",
-            "cooking_time",
-        )
+# class RecipeUserListsSerializer(ModelSerializer):
+#     class Meta:
+#         model = Recipe
+#         fields = (
+#             "id",
+#             "name",
+#             "image",
+#             "cooking_time",
+#         )
+#         read_only_fields = (
+#             "id",
+#             "name",
+#             "image",
+#             "cooking_time",
+#         )
         # read_only_fields = ("__all__",)
 
 
