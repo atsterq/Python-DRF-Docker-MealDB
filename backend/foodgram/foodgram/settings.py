@@ -3,7 +3,6 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 SECRET_KEY = (
     "django-insecure-a*9^gray^%e19^lw0^7+e)a!%a$!(tohv$1c8(32k@831_(3id"
 )
@@ -12,6 +11,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# from dotenv import load_dotenv
+
+# load_dotenv()
+
+# SECRET_KEY = os.getenv("SECRET_KEY", "key_for_autotests")
+
+# DEBUG = os.getenv("DEBUG")
+
+# WARNING: должны быть одинарные кавычки
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') 
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -23,6 +32,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
+    # 'django_filters',
     "api",
     "recipes",
     "users",
@@ -65,7 +75,16 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
-
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("POSTGRES_DB", "kittygram"),
+#         "USER": os.getenv("POSTGRES_USER", "kittygram_user"),
+#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "kittygram_password"),
+#         "HOST": os.getenv("DB_HOST", "db"),
+#         "PORT": os.getenv("DB_PORT", 5432),
+#     }
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -115,9 +134,9 @@ DJOSER = {
     "LOGIN_FIELD": "email",
     "SERIALIZERS": {
         "user": "api.serializers.UserSerializer",
-        'current_user': 'api.serializers.UserSerializer',
+        "current_user": "api.serializers.UserSerializer",
         "user_create": "api.serializers.UserSerializer",
-        'set_password': 'djoser.serializers.SetPasswordSerializer',
+        "set_password": "djoser.serializers.SetPasswordSerializer",
     },
     "PERMISSIONS": {
         "user_list": ["rest_framework.permissions.AllowAny"],
