@@ -20,7 +20,7 @@ ALLOWED_HOSTS = []
 # DEBUG = os.getenv("DEBUG")
 
 # WARNING: должны быть одинарные кавычки
-# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') 
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -126,22 +126,25 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
     ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 6,
 }
 
 DJOSER = {
     "LOGIN_FIELD": "email",
     "SERIALIZERS": {
-        "user": "api.serializers.UserSerializer",
-        "current_user": "api.serializers.UserSerializer",
-        "user_create": "api.serializers.UserSerializer",
-        "set_password": "djoser.serializers.SetPasswordSerializer",
+        "user": "api.serializers.CustomUserSerializer",
+        "current_user": "api.serializers.CustomUserSerializer",
+        "user_create": "api.serializers.CustomUserCreateSerializer",
+    #     "set_password": "djoser.serializers.SetPasswordSerializer",
     },
     "PERMISSIONS": {
         "user_list": ["rest_framework.permissions.AllowAny"],
-        "user": ["rest_framework.permissions.AllowAny"],
-        # "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+    #     # "user": ["rest_framework.permissions.AllowAny"],
+    #     "user_create": ["rest_framework.permissions.AllowAny"],
+    #     "user_delete": ["djoser.permissions.CurrentUserOrAdmin"],
+    #     # "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
     },
-    "HIDE_USERS": False,
+    # "HIDE_USERS": False,
 }

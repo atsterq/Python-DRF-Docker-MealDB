@@ -3,7 +3,15 @@ import base64
 from django.core.files.base import ContentFile
 from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+)
 from rest_framework import serializers
 from users.models import Subscription, User
 
@@ -19,26 +27,7 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = ("id", "name", "color", "slug")
-
-
-class IngredientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ingredient
-        fields = ("id", "name", "measurement_unit")
-
-
-class SubscriptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Subscription
-        fields = ("user", "author")
-
-
-class UserSerializer(serializers.ModelSerializer):
-    # recipes = SerializerMethodField(read_only=True)
+class CustomUserSerializer(UserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -50,8 +39,6 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_subscribed",
-            # "recipes",
-            # "password",
         ]
         read_only_fields = ("password",)
 
@@ -66,7 +53,19 @@ class UserSerializer(serializers.ModelSerializer):
         return Subscription.objects.filter(user=user, author=author).exists()
 
 
-class UserSubscriptionSerializer(serializers.ModelSerializer):
+class CustomUserCreateSerializer(UserCreateSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "password",
+        ]
+
+
+class UserSubscriptionSerializer(CustomUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -86,7 +85,7 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, user):
         request = self.context.get("request")
-        return RecipeSubscriptionListSerializer(
+        return RecipeListSerializer(
             user.recipes, many=True, context={"request": request}
         ).data
 
@@ -105,7 +104,19 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
         return Recipe.objects.filter(author=author).count()
 
 
-class RecipeSubscriptionListSerializer(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ("id", "name", "color", "slug")
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ("id", "name", "measurement_unit")
+
+
+class RecipeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
@@ -127,7 +138,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-# GET
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
@@ -184,7 +194,7 @@ class RecipeIngredientListSerializer(serializers.ModelSerializer):
         fields = ("id", "amount")
 
 
-class RecipeListSerializer(serializers.ModelSerializer):
+class RecipeCreateListSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientListSerializer(
         many=True, source="recipe_ingredient"
     )
@@ -244,7 +254,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        return RecipeListSerializer(
+        return RecipeCreateListSerializer(
             instance, context={"request": self.context.get("request")}
         ).data
 
@@ -275,3 +285,30 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     #     #         raise ValidationError("Tags can't be duplicated.")
     #     #     tag_list.append(tag)
     #     return instance
+
+
+class FavoriteSerializer(RecipeListSerializer):
+    class Meta:
+        model = Favorite
+        fields = ("user", "recipe")
+
+    def to_representation(self, instance):
+        return RecipeListSerializer(
+            instance, context={"request": self.context.get("request")}
+        ).data
+
+
+class ShoppingCartSerializer(RecipeListSerializer):
+    class Meta:
+        model = ShoppingCart
+        fields = ("user", "recipe")
+
+    def to_representation(self, instance):
+        return RecipeListSerializer(
+            instance, context={"request": self.context.get("request")}
+        ).data
+
+    # def to_representation(self, instance):
+    #     return representation(
+    #         self.context, instance.recipe, RecipeShortSerializer
+    #     )

@@ -1,13 +1,14 @@
 from api.permissions import Admin, AuthUser, Guest
 from api.serializers import (
+    CustomUserSerializer,
     IngredientSerializer,
     RecipeCreateSerializer,
-    # RecipeListSerializer,
     RecipeSerializer,
     TagSerializer,
     UserSubscriptionSerializer,
 )
 from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet
 from recipes.models import Ingredient, Recipe, Tag
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -22,6 +23,7 @@ class TagViewSet(
     serializer_class = TagSerializer
     permission_classes = [Admin | Guest]
     pagination_class = None
+    http_method_names = ["get"]
 
 
 class IngredientViewSet(
@@ -31,13 +33,14 @@ class IngredientViewSet(
     serializer_class = IngredientSerializer
     permission_classes = [Admin | Guest]
     pagination_class = None
+    http_method_names = ["get"]
 
 
 # `create()`, `retrieve()`, `update()`,
 #     `partial_update()`, `destroy()` and `list()` actions.
 class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [Admin | AuthUser | Guest]
-    http_method_names = ['get', 'post', 'delete', 'patch']
+    http_method_names = ["get", "post", "delete", "patch"]
 
     def dispatch(self, request, *args, **kwargs):
         res = super().dispatch(request, *args, **kwargs)
@@ -65,53 +68,47 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class SubscriptionUserViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
-    serializer_class = UserSubscriptionSerializer
-    permission_classes = [Admin | AuthUser]
-    http_method_names = ['get', 'post', 'delete']
-
-    def get_queryset(self):
-        if self.request.method == "GET":
-            return Subscription.objects.all()
-        user = get_object_or_404(User, username=self.request.user)
-        subscription = Subscription.objects.filter(user=user).values("author")
-        return User.objects.filter(pk__in=subscription)
-
-    # @action(
-    #     methods=["get"],
-    #     detail=False,
-    #     url_path="/subscriptions",
-    # )
-    # def subscription_get(self, request, pk=None):
-    #     user = get_object_or_404(User, username=request.user)
-    #     # author = get_object_or_404(User, pk=pk)
-    #     subscriptions = Subscription.objects.get(user=user)
-    #     subscriptions_serializer =
-    #     return subscriptions_serializer
+class CustomUserViewSet(UserViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [Admin | AuthUser | Guest]
+    http_method_names = ["get", "post", "delete"]
 
     @action(
-        methods=["post", "delete"],
+        methods=["GET"],
+        detail=False,
+        url_path="subscriptions",
+    )
+    def subscriptions_get(self, request):
+        queryset = User.objects.filter(author__user=request.user)
+        if not queryset.exists():
+            return Response(
+                "status: You don't have subscriptions.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        pages = self.paginate_queryset(queryset)
+        serializer = UserSubscriptionSerializer(
+            pages, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    @action(
+        methods=["POST", "DELETE"],
         detail=False,
         url_path=r"(?P<pk>\d+)/subscribe",
     )
-    def subscription_post_delete(self, request, pk=None):
+    def subscription_post_delete(self, request, pk):
         user = get_object_or_404(User, username=request.user)
         author = get_object_or_404(User, pk=pk)
         if self.request.method == "POST":
             Subscription.objects.get_or_create(user=user, author=author)
-            subscription_serializer = UserSubscriptionSerializer(author)
-            return Response(
-                subscription_serializer.data, status=status.HTTP_201_CREATED
-            )
+            serializer = UserSubscriptionSerializer(author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         subscription = get_object_or_404(
             Subscription, user=user, author=author
         )
         subscription.delete()
         return Response(
-            {"detail": "Unsubscribed."}, status=status.HTTP_204_NO_CONTENT
+            "status: Unsubscribed.",
+            status=status.HTTP_204_NO_CONTENT,
         )

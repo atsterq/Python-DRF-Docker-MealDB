@@ -36,15 +36,15 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="follower",
-        verbose_name="Follower",
-        help_text="Follows recipe author",
+        related_name="subscriber",
+        verbose_name="Subscriber",
+        help_text="Subscribed on recipe author",
     )
     author = models.ForeignKey(
         User,
         null=True,
         on_delete=models.CASCADE,
-        related_name="followed",
+        related_name="author",
         verbose_name="Author",
         help_text="Recipe author",
     )

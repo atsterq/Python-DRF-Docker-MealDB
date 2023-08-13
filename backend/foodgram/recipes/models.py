@@ -77,11 +77,6 @@ class RecipeIngredient(Model):
         ]
 
 
-# class RecipeTag(Model):
-#     tag = ForeignKey(Tag, on_delete=CASCADE)
-#     recipe = ForeignKey(Recipe, on_delete=CASCADE)
-
-
 class Favorite(Model):
     user = ForeignKey(User, on_delete=CASCADE, related_name="favorite")
     recipe = ForeignKey(Recipe, on_delete=CASCADE, related_name="favorite")
