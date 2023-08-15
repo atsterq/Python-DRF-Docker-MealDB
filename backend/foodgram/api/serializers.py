@@ -1,4 +1,5 @@
 import base64
+from urllib import request
 
 from django.core.files.base import ContentFile
 from django.forms import ValidationError
@@ -138,32 +139,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-class RecipeSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True)
-    ingredients = RecipeIngredientSerializer(
-        many=True, source="recipe_ingredient"
-    )
-    author = UserSerializer(read_only=True)
-    image = Base64ImageField()
-    # is_favorited = serializers.SerializerMethodField(read_only=True)
-    # is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = Recipe
-        fields = (
-            "id",
-            "tags",
-            "author",
-            "ingredients",
-            "name",
-            "image",
-            "text",
-            "cooking_time",
-            # "is_favorited",
-            # "is_in_shopping_cart",
-        )
-
-
 class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         source="ingredient", queryset=Ingredient.objects.all()
@@ -216,6 +191,45 @@ class RecipeCreateListSerializer(serializers.ModelSerializer):
         )
 
 
+# get, delete
+class RecipeSerializer(serializers.ModelSerializer):
+    tags = TagSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(
+        many=True, source="recipe_ingredient"
+    )
+    author = CustomUserSerializer(read_only=True)
+    image = Base64ImageField()
+    # is_favorited = serializers.SerializerMethodField(read_only=True)
+    # is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Recipe
+        fields = (
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+            # "is_favorited",
+            # "is_in_shopping_cart",
+        )
+
+    def get_is_favorited(self, instance):
+        favorited = Favorite.objects.filter(
+            user=self.context.get("request").user, recipe=instance
+        )
+        return favorited.exists()
+
+    def get_is_in_shopping_cart(self, instance):
+        shopping_cart = ShoppingCart.objects.filter(
+            user=self.context.get("request").user, recipe=instance
+        )
+        return shopping_cart.exists()
+
+
 class RecipeCreateSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientCreateSerializer(many=True, write_only=True)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -232,15 +246,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "tags",
             "ingredients",
             "author",
-            # "is_favorited",
-            # "is_in_shopping_cart",
         )
-
-    # def get_is_favorited(self, instance):
-    #     pass
-
-    # def get_is_in_shopping_cart(self, instance):
-    #     pass
 
     def create(self, validated_data):
         ingredients = validated_data.pop("ingredients")
@@ -254,6 +260,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             ).save()
 
         return instance
+
+    def update(self, recipe, validated_data):
+        recipe.tags.clear()
+        RecipeIngredient.objects.filter(recipe=recipe).delete()
+        self.add_tags(validated_data.pop("tags"), recipe)
+        self.add_ingredients(validated_data.pop("ingredients"), recipe)
+        return super().update(recipe, validated_data)
 
     def to_representation(self, instance):
         return RecipeCreateListSerializer(
@@ -309,8 +322,3 @@ class ShoppingCartSerializer(RecipeListSerializer):
         return RecipeListSerializer(
             instance, context={"request": self.context.get("request")}
         ).data
-
-    # def to_representation(self, instance):
-    #     return representation(
-    #         self.context, instance.recipe, RecipeShortSerializer
-    #     )
