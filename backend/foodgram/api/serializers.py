@@ -1,5 +1,4 @@
 import base64
-from urllib import request
 
 from django.core.files.base import ContentFile
 from django.forms import ValidationError
@@ -126,6 +125,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
             "image",
             "cooking_time",
         )
+        read_only_fields = ('__all__', )
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -199,8 +199,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     )
     author = CustomUserSerializer(read_only=True)
     image = Base64ImageField()
-    # is_favorited = serializers.SerializerMethodField(read_only=True)
-    # is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
@@ -213,8 +213,8 @@ class RecipeSerializer(serializers.ModelSerializer):
             "image",
             "text",
             "cooking_time",
-            # "is_favorited",
-            # "is_in_shopping_cart",
+            "is_favorited",
+            "is_in_shopping_cart",
         )
 
     def get_is_favorited(self, instance):
@@ -233,8 +233,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientCreateSerializer(many=True, write_only=True)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    # author = UserSerializer(read_only=True)
     image = Base64ImageField()
+    # tags = serializers.PrimaryKeyRelatedField(
+    #     queryset=Tag.objects.all(), many=True, write_only=True
+    # )
 
     class Meta:
         model = Recipe
@@ -251,22 +253,25 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients = validated_data.pop("ingredients")
         instance = super().create(validated_data)
-
         for ingredient_data in ingredients:
             RecipeIngredient(
                 recipe=instance,
                 ingredient=ingredient_data["ingredient"],
                 amount=ingredient_data["amount"],
             ).save()
-
         return instance
 
-    def update(self, recipe, validated_data):
-        recipe.tags.clear()
-        RecipeIngredient.objects.filter(recipe=recipe).delete()
-        self.add_tags(validated_data.pop("tags"), recipe)
-        self.add_ingredients(validated_data.pop("ingredients"), recipe)
-        return super().update(recipe, validated_data)
+    def update(self, instance, validated_data):
+        ingredients = validated_data.pop("ingredients")
+        instance = super().update(instance, validated_data)
+        RecipeIngredient.objects.filter(recipe=instance).delete()
+        for ingredient_data in ingredients:
+            RecipeIngredient(
+                recipe=instance,
+                ingredient=ingredient_data["ingredient"],
+                amount=ingredient_data["amount"],
+            ).save()
+        return instance
 
     def to_representation(self, instance):
         return RecipeCreateListSerializer(
