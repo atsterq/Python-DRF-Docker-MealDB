@@ -1,25 +1,17 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = (
-    "django-insecure-a*9^gray^%e19^lw0^7+e)a!%a$!(tohv$1c8(32k@831_(3id"
-)
+load_dotenv()
 
-DEBUG = True
+SECRET_KEY = os.getenv("SECRET_KEY", "key_for_autotests")
 
-ALLOWED_HOSTS = []
+DEBUG = os.getenv("DEBUG")
 
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
-# SECRET_KEY = os.getenv("SECRET_KEY", "key_for_autotests")
-
-# DEBUG = os.getenv("DEBUG")
-
-# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') # WARNING: должны быть одинарные кавычки
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -31,7 +23,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
-    'django_filters',
+    "django_filters",
     "api",
     "recipes",
     "users",
@@ -68,22 +60,25 @@ TEMPLATES = [
 WSGI_APPLICATION = "foodgram.wsgi.application"
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.getenv("POSTGRES_DB", "kittygram"),
-#         "USER": os.getenv("POSTGRES_USER", "kittygram_user"),
-#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "kittygram_password"),
-#         "HOST": os.getenv("DB_HOST", "db"),
-#         "PORT": os.getenv("DB_PORT", 5432),
-#     }
-# }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB", "foodgram"),
+            "USER": os.getenv("POSTGRES_USER", "admin"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "admin"),
+            "HOST": os.getenv("DB_HOST", "db"),
+            "PORT": os.getenv("DB_PORT", 5432),
+        }
+    }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
