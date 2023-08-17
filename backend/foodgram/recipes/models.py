@@ -69,12 +69,6 @@ class RecipeIngredient(Model):
 
     class Meta:
         verbose_name = "Recipe ingredients"
-        constraints = [
-            UniqueConstraint(
-                fields=["recipe", "ingredient"],
-                name="unique_recipe_ingredient",
-            )
-        ]
 
 
 class Favorite(Model):

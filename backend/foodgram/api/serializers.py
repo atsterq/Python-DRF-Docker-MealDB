@@ -1,7 +1,6 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import (
@@ -125,7 +124,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
             "image",
             "cooking_time",
         )
-        read_only_fields = ('__all__', )
+        read_only_fields = ("__all__",)
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -149,22 +148,6 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         fields = ("id", "amount")
 
 
-# class RecipeUserListsSerializer(ModelSerializer):
-#     class Meta:
-#         model = Recipe
-#         fields = (
-#             "id",
-#             "name",
-#             "image",
-#             "cooking_time",
-#         )
-#         read_only_fields = (
-#             "id",
-#             "name",
-#             "image",
-#             "cooking_time",
-#         )
-# read_only_fields = ("__all__",)
 class RecipeIngredientListSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
@@ -191,7 +174,6 @@ class RecipeCreateListSerializer(serializers.ModelSerializer):
         )
 
 
-# get, delete
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
@@ -234,9 +216,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientCreateSerializer(many=True, write_only=True)
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     image = Base64ImageField()
-    # tags = serializers.PrimaryKeyRelatedField(
-    #     queryset=Tag.objects.all(), many=True, write_only=True
-    # )
 
     class Meta:
         model = Recipe
@@ -278,34 +257,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             instance, context={"request": self.context.get("request")}
         ).data
 
-    # def validate_ingredients(self, instance):
-    #     if not instance:
-    #         raise ValidationError("At least one ingredient should be added.")
-
-    #     ingredients_list = []
-    #     for item in instance:
-    #         ingredient = get_object_or_404(Ingredient, id=item.get('id'))
-    #         if ingredient in ingredients_list:
-    #             raise ValidationError("Ingredients can't be duplicated.")
-    #         if int(item["amount"]) <= 0:
-    #             raise ValidationError(
-    #                 "Ingredient amount should be more than 0."
-    #             )
-    #         ingredients_list.append(ingredient)
-    #     return instance
-
-    # def validate_tags(self, instance):
-    #     if not instance:
-    #         raise ValidationError("At least one tag should be added.")
-
-    #     # tag_list = []
-    #     # for item in instance:
-    #     #     tag = get_object_or_404(Tag, id=item["id"])
-    #     #     if tag in tag_list:
-    #     #         raise ValidationError("Tags can't be duplicated.")
-    #     #     tag_list.append(tag)
-    #     return instance
-
 
 class FavoriteSerializer(RecipeListSerializer):
     class Meta:
@@ -322,8 +273,3 @@ class ShoppingCartSerializer(RecipeListSerializer):
     class Meta:
         model = ShoppingCart
         fields = ("user", "recipe")
-
-    def to_representation(self, instance):
-        return RecipeListSerializer(
-            instance, context={"request": self.context.get("request")}
-        ).data
