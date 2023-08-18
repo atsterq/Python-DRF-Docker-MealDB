@@ -31,6 +31,12 @@ from users.models import Subscription, User
 class TagViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
+    """
+    Viewset for list and retrieve tags.
+
+    Admins can add and edit tags.
+    """
+
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [Admin | Guest]
@@ -41,6 +47,14 @@ class TagViewSet(
 class IngredientViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
+    """
+    Viewset for list and retrieve ingredients.
+
+    Admins can add and edit ingredients.
+
+    Users can search ingredients by name.
+    """
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [Admin | Guest]
@@ -51,23 +65,43 @@ class IngredientViewSet(
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """
+    Viewset for recipes.
+
+    Authorized users can add new recipes.
+    All users can browse recipes.
+    Admins can add and edit recipes.
+
+    Users can filter recipes by author, tags,
+    if it in shopping cart or favorited.
+    """
+
     permission_classes = [Admin | AuthUser | Guest]
     http_method_names = ["get", "post", "delete", "patch"]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_queryset(self):
+        """
+        Method for getting queryset.
+        """
         recipes = Recipe.objects.prefetch_related(
             "recipe_ingredient__ingredient", "tags"
         ).all()
         return recipes
 
     def get_serializer_class(self):
+        """
+        Method for serializer class.
+        """
         if self.request.method == "POST" or self.request.method == "PATCH":
             return RecipeCreateSerializer
         return RecipeSerializer
 
     def perform_create(self, serializer):
+        """
+        Method for creating a recipe.
+        """
         serializer.save(author=self.request.user)
 
     @action(
@@ -76,6 +110,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path="favorite",
     )
     def favorite(self, request, pk):
+        """
+        Method for adding or deleting recipe from favorited.
+        """
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == "POST":
             Favorite.objects.get_or_create(
@@ -98,6 +135,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path="shopping_cart",
     )
     def shopping_cart(self, request, pk):
+        """
+        Method for adding or deleting recipe from shopping cart.
+        """
         recipe = get_object_or_404(Recipe, pk=pk)
         if request.method == "POST":
             ShoppingCart.objects.get_or_create(
@@ -120,6 +160,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path="download_shopping_cart",
     )
     def download_shopping_cart(self, request):
+        """
+        Method for downloading a shopping list file.
+        """
         if not request.user.shopping_cart.exists():
             return Response(
                 "error: Shopping cart is empty.",
@@ -155,6 +198,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class CustomUserViewSet(UserViewSet):
+    """
+    Viewset for users.
+
+    Registration, authorization, listing users.
+
+    Users can subscribe, unsubscribe and browse their subscriptions.
+    """
+
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [Admin | AuthUser | Guest]
@@ -166,6 +217,9 @@ class CustomUserViewSet(UserViewSet):
         url_path="subscriptions",
     )
     def subscriptions_get(self, request):
+        """
+        Method for get user subscriptions.
+        """
         queryset = User.objects.filter(author__user=request.user)
         if not queryset.exists():
             return Response(
@@ -184,6 +238,9 @@ class CustomUserViewSet(UserViewSet):
         url_path=r"(?P<pk>\d+)/subscribe",
     )
     def subscription_post_delete(self, request, pk):
+        """
+        Method for subscribe and unsubscribe to authors.
+        """
         user = get_object_or_404(User, username=request.user)
         author = get_object_or_404(User, pk=pk)
         if self.request.method == "POST":

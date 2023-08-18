@@ -40,6 +40,13 @@ class Tag(Model):
 
 
 class Ingredient(Model):
+    """
+    Ingredient model based on abstract model.
+
+    It represents ingredients for cooking a recipe.
+
+    All fields are required.
+    """
     name = CharField(max_length=200, db_index=True)
     measurement_unit = CharField(max_length=200)
 
