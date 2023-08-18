@@ -1,13 +1,28 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.db.models import (
+    CASCADE,
+    CharField,
+    EmailField,
+    ForeignKey,
+    Model,
+    TextChoices,
+    TextField,
+    UniqueConstraint,
+)
 
 
 class User(AbstractUser):
-    class UserRole(models.TextChoices):
+    """
+    User model based on abstract user class.
+
+    All fields are required. Username and email are unique.
+    """
+
+    class UserRole(TextChoices):
         USER = ("user", "user")
         ADMIN = ("admin", "admin")
 
-    email = models.EmailField(
+    email = EmailField(
         "Email",
         max_length=200,
         unique=True,
@@ -15,35 +30,42 @@ class User(AbstractUser):
             "unique": "This email already used.",
         },
     )
-    role = models.CharField(
+    role = CharField(
         max_length=50, choices=UserRole.choices, default=UserRole.USER
     )
-    username = models.CharField("username", max_length=200, unique=True)
-    first_name = models.TextField("first_name", max_length=200)
-    last_name = models.TextField("last_name", max_length=200)
-    password = models.TextField("password", max_length=200)
+    username = CharField("username", max_length=200, unique=True)
+    first_name = TextField("first_name", max_length=200)
+    last_name = TextField("last_name", max_length=200)
+    password = TextField("password", max_length=200)
 
     @property
     def is_admin(self):
-        return (self.role == self.UserRole.ADMIN
-                or self.is_superuser)
+        return self.role == self.UserRole.ADMIN or self.is_superuser
 
     def __str__(self):
         return self.username
 
 
-class Subscription(models.Model):
-    user = models.ForeignKey(
+class Subscription(Model):
+    """
+    Subscription model based on abstract model.
+
+    It represents user's subscriptions to recipe author.
+
+    User's subscriptions are unique.
+    """
+
+    user = ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=CASCADE,
         related_name="subscriber",
         verbose_name="Subscriber",
         help_text="Subscribed on recipe author",
     )
-    author = models.ForeignKey(
+    author = ForeignKey(
         User,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=CASCADE,
         related_name="author",
         verbose_name="Author",
         help_text="Recipe author",
@@ -51,7 +73,7 @@ class Subscription(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
+            UniqueConstraint(
                 fields=["author", "user"], name="unique_subscription"
             )
         ]

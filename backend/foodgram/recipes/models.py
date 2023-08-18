@@ -17,6 +17,15 @@ User = get_user_model()
 
 
 class Tag(Model):
+    """
+    Tag model based on abstract model.
+
+    It represents tags that can be added when creating a recipe.
+    Users can filter recipes based on given tags.
+
+    All fields are required and unique.
+    """
+
     name = CharField(max_length=200, unique=True)
     color = CharField(max_length=7, unique=True)
     slug = SlugField(max_length=200, unique=True)
@@ -36,6 +45,14 @@ class Ingredient(Model):
 
 
 class Recipe(Model):
+    """
+    Recipe model based on abstract model.
+
+    It represents user's recipes.
+    Users can create and edit recipes, browse other authors recipes.
+
+    All fields are required. Author and publication date added automatically.
+    """
     tags = ManyToManyField(Tag)
     name = CharField(max_length=200)
     cooking_time = PositiveIntegerField()
@@ -59,6 +76,13 @@ class Recipe(Model):
 
 
 class RecipeIngredient(Model):
+    """
+    Related model between recipe and ingredient based on abstract model.
+
+    Needed for correct addition of ingredient amount to recipe.
+
+    All fields are required.
+    """
     recipe = ForeignKey(
         Recipe, on_delete=CASCADE, related_name="recipe_ingredient"
     )
@@ -72,6 +96,13 @@ class RecipeIngredient(Model):
 
 
 class Favorite(Model):
+    """
+    Favorite model based on abstract model.
+
+    It represents adding a recipe to user's favorite.
+
+    All fields are required.
+    """
     user = ForeignKey(User, on_delete=CASCADE, related_name="favorite")
     recipe = ForeignKey(Recipe, on_delete=CASCADE, related_name="favorite")
 
@@ -86,6 +117,14 @@ class Favorite(Model):
 
 
 class ShoppingCart(Model):
+    """
+    Shopping cart model based on abstract model.
+
+    It represents user's added recipes to their shopping cart.
+    Users can then download ingredients shopping list.
+
+    All fields are required.
+    """
     user = ForeignKey(User, on_delete=CASCADE, related_name="shopping_cart")
     recipe = ForeignKey(
         Recipe, on_delete=CASCADE, related_name="shopping_cart"
