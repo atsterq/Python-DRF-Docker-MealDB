@@ -153,7 +153,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeListSerializer(serializers.ModelSerializer):
     """
-    Serializer for listin a recipe.
+    Serializer for listing a recipe.
     """
 
     class Meta:
@@ -264,7 +264,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         Method for checking if recipe is favorited by current user.
         """
         favorited = Favorite.objects.filter(
-            user=self.context.get("request").user, recipe=instance
+            user=self.context.get("request").user.id, recipe=instance
         )
         return favorited.exists()
 
@@ -273,7 +273,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         Method for checking if recipe is in user's shopping cart.
         """
         shopping_cart = ShoppingCart.objects.filter(
-            user=self.context.get("request").user, recipe=instance
+            user=self.context.get("request").user.id, recipe=instance
         )
         return shopping_cart.exists()
 

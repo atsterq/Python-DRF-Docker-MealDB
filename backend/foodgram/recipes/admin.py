@@ -1,5 +1,12 @@
 from django.contrib import admin
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+)
 from users.models import Subscription, User
 
 
@@ -34,8 +41,6 @@ class Subscription(admin.ModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ("name",)
-    list_display = ("name",)
-    search_fields = ("name",)
 
 
 @admin.register(Recipe)
@@ -46,11 +51,23 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ("name", "author", "favorite")
     inlines = (RecipeIngredientInLine,)
     list_filter = ("name", "author", "tags")
+    search_fields = ("name",)
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ("name", "measurement_unit")
     list_filter = ("name",)
-    list_display = ("name", "measurement_unit")
-    list_filter = ("name",)
+    search_fields = ("name",)
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ("user", "recipe")
+    list_filter = ("user",)
+
+
+@admin.register(ShoppingCart)
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ("user", "recipe")
+    list_filter = ("user",)

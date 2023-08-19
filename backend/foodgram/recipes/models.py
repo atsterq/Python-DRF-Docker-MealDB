@@ -86,7 +86,7 @@ class RecipeIngredient(Model):
     """
     Related model between recipe and ingredient based on abstract model.
 
-    Needed for correct addition of ingredient amount to recipe.
+    Needed for correct addition of ingredients amount to recipe.
 
     All fields are required.
     """

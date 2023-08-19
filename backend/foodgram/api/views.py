@@ -1,5 +1,5 @@
-from api.filters import RecipeFilter
-from api.permissions import Admin, AuthUser, Guest
+from api.filters import IngredientFilter, RecipeFilter
+from api.permissions import Admin, AuthUser, Guest, IsAuthorOrAdminOrReadOnly
 from api.serializers import (
     CustomUserSerializer,
     IngredientSerializer,
@@ -22,8 +22,9 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
-from rest_framework import filters, mixins, status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscription, User
 
@@ -60,7 +61,7 @@ class IngredientViewSet(
     permission_classes = [Admin | Guest]
     pagination_class = None
     http_method_names = ["get"]
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (IngredientFilter,)
     search_fields = ("^name",)
 
 
@@ -77,6 +78,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [Admin | AuthUser | Guest]
+    # permission_classes = (IsAuthorOrAdminOrReadOnly,)
     http_method_names = ["get", "post", "delete", "patch"]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -208,7 +210,7 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [Admin | AuthUser | Guest]
+    permission_classes = [Admin | AuthUser]
     http_method_names = ["get", "post", "delete"]
 
     @action(
