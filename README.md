@@ -1,1 +1,2 @@
-# praktikum_new_diplom
+login: a@m.com
+password: admin

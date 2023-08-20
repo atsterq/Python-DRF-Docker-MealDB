@@ -1,7 +1,6 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import (
     Favorite,
@@ -55,12 +54,10 @@ class CustomUserSerializer(UserSerializer):
         """
         if not self.context:
             return False
-        username = self.context["request"].user
-        if not username.is_authenticated or data.username == username:
-            return False
-        user = get_object_or_404(User, username=username)
-        author = get_object_or_404(User, username=data.username)
-        return Subscription.objects.filter(user=user, author=author).exists()
+        subscription = Subscription.objects.filter(
+            user=self.context.get("request").user.id, author=data
+        )
+        return subscription.exists()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -101,14 +98,15 @@ class UserSubscriptionSerializer(CustomUserSerializer):
             "recipes_count",
         )
 
-    def get_recipes(self, user):
+    def get_recipes(self, data):
         """
-        Method for user's recipes.
+        Method for getting user's recipes.
         """
         request = self.context.get("request")
-        return RecipeListSerializer(
-            user.recipes, many=True, context={"request": request}
-        ).data
+        serializer = RecipeListSerializer(
+            data.recipes, many=True, context={"request": request}
+        )
+        return serializer.data
 
     def get_is_subscribed(self, data):
         """
@@ -116,19 +114,17 @@ class UserSubscriptionSerializer(CustomUserSerializer):
         """
         if not self.context:
             return False
-        username = self.context["request"].user
-        if not username.is_authenticated or data.username == username:
-            return False
-        user = get_object_or_404(User, username=username)
-        author = get_object_or_404(User, username=data.username)
-        return Subscription.objects.filter(user=user, author=author).exists()
+        subscription = Subscription.objects.filter(
+            user=self.context.get("request").user.id, author=data
+        )
+        return subscription.exists()
 
     def get_recipes_count(self, data):
         """
         Method for counting user's recipes.
         """
-        author = get_object_or_404(User, username=data.username)
-        return Recipe.objects.filter(author=author).count()
+        recipes = Recipe.objects.filter(author=data)
+        return recipes.count()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -196,40 +192,6 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
         fields = ("id", "amount")
 
 
-class RecipeIngredientListSerializer(serializers.ModelSerializer):
-    """
-    Serializer for nested ingredient field.
-    """
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ("id", "amount")
-
-
-class RecipeCreateListSerializer(serializers.ModelSerializer):
-    """
-    Serializer for representation a created recipe.
-    """
-
-    ingredients = RecipeIngredientListSerializer(
-        many=True, source="recipe_ingredient"
-    )
-    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    class Meta:
-        model = Recipe
-        fields = (
-            "id",
-            "tags",
-            "author",
-            "ingredients",
-            "name",
-            "image",
-            "text",
-            "cooking_time",
-        )
-
-
 class RecipeSerializer(serializers.ModelSerializer):
     """
     Serializer for listing a recipe.
@@ -259,21 +221,21 @@ class RecipeSerializer(serializers.ModelSerializer):
             "is_in_shopping_cart",
         )
 
-    def get_is_favorited(self, instance):
+    def get_is_favorited(self, data):
         """
         Method for checking if recipe is favorited by current user.
         """
         favorited = Favorite.objects.filter(
-            user=self.context.get("request").user.id, recipe=instance
+            user=self.context.get("request").user.id, recipe=data
         )
         return favorited.exists()
 
-    def get_is_in_shopping_cart(self, instance):
+    def get_is_in_shopping_cart(self, data):
         """
         Method for checking if recipe is in user's shopping cart.
         """
         shopping_cart = ShoppingCart.objects.filter(
-            user=self.context.get("request").user.id, recipe=instance
+            user=self.context.get("request").user.id, recipe=data
         )
         return shopping_cart.exists()
 
@@ -332,34 +294,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         """
         Method for representing a recipe.
         """
-        return RecipeCreateListSerializer(
+        serializer = RecipeSerializer(
             instance, context={"request": self.context.get("request")}
-        ).data
-
-
-class FavoriteSerializer(RecipeListSerializer):
-    """
-    Serializer for users favorite recipes.
-    """
-
-    class Meta:
-        model = Favorite
-        fields = ("user", "recipe")
-
-    def to_representation(self, instance):
-        """
-        Method for representing a favorite recipe.
-        """
-        return RecipeListSerializer(
-            instance, context={"request": self.context.get("request")}
-        ).data
-
-
-class ShoppingCartSerializer(RecipeListSerializer):
-    """
-    Serializer for shopping cart.
-    """
-
-    class Meta:
-        model = ShoppingCart
-        fields = ("user", "recipe")
+        )
+        return serializer.data

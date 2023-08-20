@@ -5,7 +5,6 @@ from django.db.models import (
     EmailField,
     ForeignKey,
     Model,
-    TextChoices,
     TextField,
     UniqueConstraint,
 )
@@ -18,10 +17,6 @@ class User(AbstractUser):
     All fields are required. Username and email are unique.
     """
 
-    # class UserRole(TextChoices):
-    #     USER = ("user", "user")
-    #     ADMIN = ("admin", "admin")
-
     email = EmailField(
         "Email",
         max_length=200,
@@ -30,17 +25,11 @@ class User(AbstractUser):
             "unique": "This email already used.",
         },
     )
-    # role = CharField(
-    #     max_length=50, choices=UserRole.choices, default=UserRole.USER
-    # )
+
     username = CharField("username", max_length=200, unique=True)
     first_name = TextField("first_name", max_length=200)
     last_name = TextField("last_name", max_length=200)
     password = TextField("password", max_length=200)
-
-    # @property
-    # def is_admin(self):
-    #     return self.role == self.UserRole.ADMIN or self.is_superuser
 
     def __str__(self):
         return self.username

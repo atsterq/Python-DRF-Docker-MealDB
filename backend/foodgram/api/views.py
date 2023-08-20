@@ -1,5 +1,5 @@
 from api.filters import IngredientFilter, RecipeFilter
-from api.permissions import Admin, AuthUser, Guest, IsAuthorOrAdminOrReadOnly
+from api.permissions import Admin, AuthUser, Guest
 from api.serializers import (
     CustomUserSerializer,
     IngredientSerializer,
@@ -24,7 +24,6 @@ from recipes.models import (
 )
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Subscription, User
 
@@ -78,7 +77,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [Admin | AuthUser | Guest]
-    # permission_classes = (IsAuthorOrAdminOrReadOnly,)
     http_method_names = ["get", "post", "delete", "patch"]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -110,8 +108,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=["POST", "DELETE"],
         detail=True,
         url_path="favorite",
+        permission_classes=[Admin | AuthUser],
     )
-    def favorite(self, request, pk):
+    def post_delete_favorite(self, request, pk):
         """
         Method for adding or deleting recipe from favorited.
         """
@@ -126,17 +125,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Favorite, user=self.request.user, recipe=recipe
         )
         favorite.delete()
-        return Response(
+        response = Response(
             "status: Deleted from favorite.",
             status=status.HTTP_204_NO_CONTENT,
         )
+        return response
 
     @action(
         methods=["POST", "DELETE"],
         detail=True,
         url_path="shopping_cart",
+        permission_classes=[Admin | AuthUser],
     )
-    def shopping_cart(self, request, pk):
+    def post_delete_shopping_cart(self, request, pk):
         """
         Method for adding or deleting recipe from shopping cart.
         """
@@ -151,15 +152,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ShoppingCart, user=self.request.user, recipe=recipe
         )
         shopping_cart.delete()
-        return Response(
+        response = Response(
             "status: Deleted from shopping cart.",
             status=status.HTTP_204_NO_CONTENT,
         )
+        return response
 
     @action(
         methods=["GET"],
         detail=False,
         url_path="download_shopping_cart",
+        permission_classes=[Admin | AuthUser],
     )
     def download_shopping_cart(self, request):
         """
@@ -210,15 +213,16 @@ class CustomUserViewSet(UserViewSet):
 
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [Admin | AuthUser]
+    permission_classes = [Admin | AuthUser | Guest]
     http_method_names = ["get", "post", "delete"]
 
     @action(
         methods=["GET"],
         detail=False,
         url_path="subscriptions",
+        permission_classes=[Admin | AuthUser],
     )
-    def subscriptions_get(self, request):
+    def get_subscriptions(self, request):
         """
         Method for get user subscriptions.
         """
@@ -232,14 +236,16 @@ class CustomUserViewSet(UserViewSet):
         serializer = UserSubscriptionSerializer(
             pages, many=True, context={"request": request}
         )
-        return self.get_paginated_response(serializer.data)
+        response = self.get_paginated_response(serializer.data)
+        return response
 
     @action(
         methods=["POST", "DELETE"],
         detail=False,
         url_path=r"(?P<pk>\d+)/subscribe",
+        permission_classes=[Admin | AuthUser],
     )
-    def subscription_post_delete(self, request, pk):
+    def post_delete_subscription(self, request, pk):
         """
         Method for subscribe and unsubscribe to authors.
         """
@@ -253,7 +259,8 @@ class CustomUserViewSet(UserViewSet):
             Subscription, user=user, author=author
         )
         subscription.delete()
-        return Response(
+        response = Response(
             "status: Unsubscribed.",
             status=status.HTTP_204_NO_CONTENT,
         )
+        return response
