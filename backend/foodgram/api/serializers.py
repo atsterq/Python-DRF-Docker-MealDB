@@ -1,6 +1,5 @@
-import base64
-
-from django.core.files.base import ContentFile
+from api.fields import Base64ImageField
+from django.db import transaction
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from recipes.models import (
     Favorite,
@@ -12,21 +11,6 @@ from recipes.models import (
 )
 from rest_framework import serializers
 from users.models import Subscription, User
-
-
-class Base64ImageField(serializers.ImageField):
-    """
-    Serializer for recipes image.
-    """
-
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith("data:image"):
-            format, imgstr = data.split(";base64,")
-            ext = format.split("/")[-1]
-
-            data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
-
-        return super().to_internal_value(data)
 
 
 class CustomUserSerializer(UserSerializer):
@@ -261,33 +245,51 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "author",
         )
 
+    @transaction.atomic
     def create(self, validated_data):
         """
         Method for creating a recipe.
         """
         ingredients = validated_data.pop("ingredients")
         instance = super().create(validated_data)
+        ingredients_bulk_list = []
         for ingredient_data in ingredients:
-            RecipeIngredient(
-                recipe=instance,
-                ingredient=ingredient_data["ingredient"],
-                amount=ingredient_data["amount"],
-            ).save()
+            ingredients_bulk_list.append(
+                RecipeIngredient(
+                    recipe=instance,
+                    ingredient=ingredient_data["ingredient"],
+                    amount=ingredient_data["amount"],
+                )
+            )
+        RecipeIngredient.objects.bulk_create(ingredients_bulk_list)
         return instance
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         """
         Method for updating a recipe.
         """
         ingredients = validated_data.pop("ingredients")
         instance = super().update(instance, validated_data)
-        RecipeIngredient.objects.filter(recipe=instance).delete()
+        # RecipeIngredient.objects.filter(recipe=instance).delete()
+        # for ingredient_data in ingredients:
+        #     RecipeIngredient(
+        #         recipe=instance,
+        #         ingredient=ingredient_data["ingredient"],
+        #         amount=ingredient_data["amount"],
+        #     ).save()
+        ingredients_bulk_list = []
         for ingredient_data in ingredients:
-            RecipeIngredient(
-                recipe=instance,
-                ingredient=ingredient_data["ingredient"],
-                amount=ingredient_data["amount"],
-            ).save()
+            ingredients_bulk_list.append(
+                RecipeIngredient(
+                    recipe=instance,
+                    ingredient=ingredient_data["ingredient"],
+                    amount=ingredient_data["amount"],
+                )
+            )
+        RecipeIngredient.objects.bulk_update(
+            ingredients_bulk_list, ["ingredient"], ["amount"]
+        )
         return instance
 
     def to_representation(self, instance):

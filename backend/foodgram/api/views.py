@@ -1,3 +1,4 @@
+
 from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import Admin, AuthUser, Guest
 from api.serializers import (
@@ -87,7 +88,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """
         recipes = Recipe.objects.prefetch_related(
             "recipe_ingredient__ingredient", "tags"
-        ).all()
+        )
         return recipes
 
     def get_serializer_class(self):

@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import (
     CASCADE,
     CharField,
@@ -47,8 +48,15 @@ class Ingredient(Model):
 
     All fields are required.
     """
+
     name = CharField(max_length=200, db_index=True)
     measurement_unit = CharField(max_length=200)
+
+    class Meta:
+        unique_together = (
+            "name",
+            "measurement_unit",
+        )
 
 
 class Recipe(Model):
@@ -60,9 +68,12 @@ class Recipe(Model):
 
     All fields are required. Author and publication date added automatically.
     """
+
     tags = ManyToManyField(Tag)
     name = CharField(max_length=200)
-    cooking_time = PositiveIntegerField()
+    cooking_time = PositiveIntegerField(
+        validators=[MaxValueValidator(2880), MinValueValidator(1)]
+    )
     text = TextField()
     author = ForeignKey(User, on_delete=CASCADE, related_name="recipes")
     ingredients = ManyToManyField(
@@ -90,13 +101,16 @@ class RecipeIngredient(Model):
 
     All fields are required.
     """
+
     recipe = ForeignKey(
         Recipe, on_delete=CASCADE, related_name="recipe_ingredient"
     )
     ingredient = ForeignKey(
         Ingredient, on_delete=CASCADE, related_name="recipe_ingredient"
     )
-    amount = PositiveIntegerField()
+    amount = PositiveIntegerField(
+        validators=[MaxValueValidator(5000), MinValueValidator(1)]
+    )
 
     class Meta:
         verbose_name = "Recipe ingredients"
@@ -110,6 +124,7 @@ class Favorite(Model):
 
     All fields are required.
     """
+
     user = ForeignKey(User, on_delete=CASCADE, related_name="favorite")
     recipe = ForeignKey(Recipe, on_delete=CASCADE, related_name="favorite")
 
@@ -132,6 +147,7 @@ class ShoppingCart(Model):
 
     All fields are required.
     """
+
     user = ForeignKey(User, on_delete=CASCADE, related_name="shopping_cart")
     recipe = ForeignKey(
         Recipe, on_delete=CASCADE, related_name="shopping_cart"
