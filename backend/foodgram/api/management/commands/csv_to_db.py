@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from recipes.models import Ingredient
 
 PATH_TO_CSV = os.path.join(
-    os.path.dirname(os.path.dirname(settings.BASE_DIR)),
+    (settings.BASE_DIR),
     "data",
     "ingredients.csv",
 )

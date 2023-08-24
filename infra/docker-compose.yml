@@ -17,13 +17,12 @@ services:
     build: ../backend/foodgram/
     volumes:
       - static_foodgram:/backend_static
-      - media_foodgram:/app/media
+      - media_foodgram:/app/media/recipes/
     env_file: ../backend/foodgram/foodgram/.env
     depends_on:
       - db
 
   frontend:
-    env_file: ../backend/foodgram/foodgram/.env
     build: ../frontend/
     command: cp -r /app/build/. /frontend_static/
     volumes:
