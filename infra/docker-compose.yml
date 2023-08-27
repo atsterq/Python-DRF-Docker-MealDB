@@ -17,7 +17,7 @@ services:
     build: ../backend/foodgram/
     volumes:
       - static_foodgram:/backend_static
-      - media_foodgram:/app/media/recipes/
+      - media_foodgram:/app/media
     env_file: ../backend/foodgram/foodgram/.env
     depends_on:
       - db
@@ -30,7 +30,6 @@ services:
 
   gateway:
     build: ../nginx/
-    env_file: ../backend/foodgram/foodgram/.env
     ports:
       - 8080:80
     volumes:
