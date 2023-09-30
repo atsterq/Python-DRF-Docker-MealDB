@@ -65,7 +65,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-git clone git@github.com:Xewus/foodgram-project-react.git
+
 Connect to your server:
 ssh <server user>@<server IP>
 Install Docker on your server
