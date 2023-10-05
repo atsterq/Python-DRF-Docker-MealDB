@@ -1,5 +1,5 @@
 ## Описание:
-«MealDB» — это сайт, на котором можно публиковать собственные рецепты, добавлять чужие рецепты в избранное, подписываться на других авторов и создавать список покупок для выбранных блюд.
+«MealDB» — это сайт с базой данных рецептов и ингридиентов, на котором можно публиковать собственные рецепты, добавлять чужие рецепты в избранное, подписываться на других авторов и создавать список покупок для выбранных блюд.  
 Приложение упаковано в докер контейнеры и готово к развертыванию по инструкции ниже.
 
 ## Что было сделано в ходе работы над проектом:  
@@ -25,43 +25,85 @@
 
 ## Как запустить проект в докер контейнерах на вашем сервере:
 
-1. Подключитесь к вашему серверу с помощью SSH:
+- Скопируйте репозиторий на свой локальный компьютер:
+
+```
+git clone https://github.com/atsterq/MealDB
+```
+
+- Локально отредактируйте файл infra/nginx.conf и в строке server_name впишите свой IP
+
+- Подключитесь к вашему серверу с помощью SSH:
 ```
 ssh <server user>@<server IP>
 ```
 
-2. Установите Docker на вашем сервере:
+- Установите Docker на вашем сервере:
 ```
 sudo apt install docker.io
 ```
 
-3. Установите Docker Compose (для Linux):
+- Установите Docker Compose (для Linux):
 ```
 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 ```
 
-4. Получите разрешения для docker-compose:
+- Получите разрешения для docker-compose:
 ```
 sudo chmod +x /usr/local/bin/docker-compose
 ```
 
-5. Создайте директорию проекта (желательно в вашей домашней директории):
+- Создайте директорию проекта (желательно в вашей домашней директории):
 ```
 mkdir MealDB && cd MealDB/
 ```
 
-6. Скопируйте файлы из 'infra/' (на вашем локальном компьютере) на ваш сервер:
+- Скопируйте файлы из 'infra/' (на вашем локальном компьютере) на ваш сервер:
 ```
 scp -r infra/* <server user>@<server IP>:/home/<server user>/foodgram/
 ```
 
-7. Переименуйте .env.example в .env
-
+- Cоздайте .env файл:
 ```
 mv .env.example .env
 ```
 
-8. Запустите docker-compose:
+- И впишите в него:
+```
+POSTGRES_DB=<имя базы данных postgres>
+POSTGRES_USER=<пользователь бд>
+POSTGRES_PASSWORD=<пароль>
+DB_HOST=db
+DB_PORT=5432
+SECRET_KEY=секретный ключ проекта django>
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,158.160.70.1,0.0.0.0,<IP или название вашего сервера>
+```
+
+- Запустите docker-compose:
 ```
 sudo docker-compose up -d
 ```
+
+- После успешной сборки на сервере выполните команды (только после первого деплоя):
+- Соберите статические файлы:
+
+```
+sudo docker-compose exec backend python manage.py collectstatic --noinput
+```
+Примените миграции:
+```
+sudo docker-compose exec backend python manage.py migrate --noinput
+```
+Загрузите ингридиенты в базу данных c помощью менеджмент комманды:
+```
+sudo docker-compose exec backend python manage.py csv_to_db
+```
+Создайте суперпользователя Django:
+```
+sudo docker-compose exec backend python manage.py createsuperuser
+```
+Готово, проект будет доступен по вашему IP!
+
+## Backend:
+https://github.com/atsterq/
