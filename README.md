@@ -60,7 +60,7 @@ mkdir MealDB && cd MealDB/
 
 - Скопируйте файлы из 'infra/' (на вашем локальном компьютере) на ваш сервер:
 ```
-scp -r infra/* <server user>@<server IP>:/home/<server user>/foodgram/
+scp -r infra/* <server user>@<server IP>:/home/<server user>/MealDB/
 ```
 
 - Cоздайте .env файл:
@@ -82,7 +82,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1,158.160.70.1,0.0.0.0,<IP или названи
 
 - Запустите docker-compose:
 ```
-sudo docker-compose up -d
+sudo docker-compose.production up -d
 ```
 
 - После успешной сборки на сервере выполните команды (только после первого деплоя):
