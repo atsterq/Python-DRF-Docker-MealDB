@@ -112,7 +112,7 @@ sudo docker-compose exec backend python manage.py createsuperuser
 
 ## Лицензия
 
-Этот проект лицензирован по лицензии MIT. Подробности смотрите в файле `LICENSE`.
+Этот проект лицензирован по лицензии MIT.
 
-## Backend:
+## Backend
 https://github.com/atsterq/
